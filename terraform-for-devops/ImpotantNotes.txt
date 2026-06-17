@@ -1,0 +1,92 @@
+What is a State Conflict in Terraform?
+
+A state conflict happens when Terraform’s state file does not match reality or becomes inconsistent, usually due to:
+
+manual changes in AWS (outside Terraform)
+multiple people using the same state
+wrong imports or duplicate resources
+partially applied changes or failed runs
+
+In simple terms:
+
+Terraform thinks resource X is in a certain state, but AWS or state file disagrees.
+
+🔥 Common types of state conflicts
+1. Drift (most common)
+
+Someone changes infrastructure manually.
+
+Example:
+
+You change EC2 instance type in AWS console
+Terraform still thinks old value exists
+2. Duplicate resource conflict
+
+Same resource exists in:
+
+state file
+and again re-imported or recreated
+3. Missing resource in state
+
+Resource exists in AWS but NOT in Terraform state
+(because of terraform state rm or failed import)
+
+4. Already exists conflict during import
+
+You try importing something already managed in state.
+
+5. Wrong state mapping
+
+Imported into wrong resource block:
+
+wrong name
+wrong type
+wrong address
+🛠️ How to detect state conflict
+
+Run:
+
+terraform plan
+
+If you see:
+
+~ update in-place
+-/+ replace
+unexpected changes
+
+👉 that indicates drift or conflict
+
+🧯 How to resolve state conflicts
+✅ 1. Refresh state
+terraform refresh
+
+(or just terraform plan, which auto-refreshes now)
+
+✅ 2. Re-import resource
+
+If missing from state:
+
+terraform import <resource> <id>
+✅ 3. Fix configuration to match reality
+
+Adjust .tf file so it matches actual AWS resource.
+
+✅ 4. Remove wrong state entry
+
+If state is wrong:
+
+terraform state rm <resource>
+
+then re-import correctly
+
+✅ 5. Force replace (last option)
+terraform apply -replace="aws_instance.my_ec2"
+📌 Personal Notes Summary
+State conflict = mismatch between Terraform state and real infrastructure
+Caused by manual changes, wrong imports, or state corruption
+Always detect using terraform plan
+Fix using:
+refresh
+import
+state rm
+re-apply
